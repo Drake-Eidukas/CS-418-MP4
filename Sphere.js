@@ -5,24 +5,24 @@
  * @class Sphere
  */
 class Sphere {
-  constructor (radius = 0.1, speed = 0.05) {
+  constructor (radius = Math.random(), speed = Math.random() * 200) {
     this.radius = radius
     this.speed = speed
 
     this.position = vec3.create()
-    vec3.random(this.position)
+    vec3.random(this.position, 1 - this.radius)
 
     this.velocity = vec3.create()
     vec3.random(this.velocity, speed)
   }
 
   get radius () {
-    return this.radius
+    return this._radius
   }
 
   set radius (radius) {
-    this.radius = radius
-    this.radSq = this.radius * this.radius
+    this._radius = radius
+    this.radiusSq = this.radius * this.radius
 
     this.mass = radius * radius * 0.5
 
@@ -33,45 +33,45 @@ class Sphere {
   }
 
   get position () {
-    return this.position
+    return this._position
   }
 
   set position (position) {
-    this.position = position
+    this._position = position
   }
 
   get velocity () {
-    return this.velocity
+    return this._velocity
   }
 
   set velocity (velocity) {
-    this.velocity = velocity
+    this._velocity = velocity
     this.speed = vec3.length(this.velocity)
   }
 
   get speed () {
-    return this.speed
+    return this._speed
   }
 
   set speed (speed) {
-    this.speed = Math.max(speed, -speed)
+    this._speed = Math.max(speed, -speed)
     this.speedSq = this.speed * this.speed
   }
 
   get color () {
-    return this.color
+    return this._color
   }
 
   set color (color) {
-    this.color = color
+    this._color = color
   }
 
   get mass () {
-    return this.mass
+    return this._mass
   }
 
   set mass (mass) {
-    this.mass = mass
+    this._mass = mass
   }
 
   static get HALFCDRHO () {
@@ -128,7 +128,7 @@ class Sphere {
 
     let velocity = this.velocity
     vec3.add(velocity, velocity, acceleration)
-    this.velocity = this.velocity
+    this.velocity = velocity
 
     return this.velocity
   }
@@ -156,7 +156,7 @@ class Sphere {
    * However, we choose to allow this to happen, as it roughly translates to losing energy from crashing into walls.
    * @memberOf Sphere
    */
-  handleCollisions (timeDelta, boundingRange = this.createBoundingRange(-1, 1, -1, 1, -1, 1)) {
+  handleCollisions (timeDelta, boundingRange = this.createBoundingRange(-10, 10, -10, 10, -10, 10)) {
     let position = this.position
     let x = position[0]
     let y = position[1]
@@ -169,58 +169,46 @@ class Sphere {
 
     // Bounding box of position-- box - radius
     let xMin = boundingRange.x.min + this.radius
-    let xMax = boundingRange.x.min - this.radius
+    let xMax = boundingRange.x.max - this.radius
     let yMin = boundingRange.y.min + this.radius
-    let yMax = boundingRange.y.min - this.radius
+    let yMax = boundingRange.y.max - this.radius
     let zMin = boundingRange.z.min + this.radius
-    let zMax = boundingRange.z.min - this.radius
+    let zMax = boundingRange.z.max - this.radius
 
-    // Times since overlap occured.
-    let xMinOverlap = (x - xMin) / xVelocity
-    let xMaxOverlap = (x - xMax) / xVelocity
-    let yMinOverlap = (y - yMin) / yVelocity
-    let yMaxOverlap = (y - yMax) / yVelocity
-    let zMinOverlap = (z - zMin) / zVelocity
-    let zMaxOverlap = (z - zMax) / zVelocity
-
-    // No collisions-- we can safely return
-    let maxOverlap = Math.max(xMinOverlap, xMaxOverlap, yMinOverlap, yMaxOverlap, zMinOverlap, zMaxOverlap)
-    if (maxOverlap <= 0) {
-      return
-    }
-
-    if (xMinOverlap === maxOverlap) {
+    if (x < xMin) {
+      x = xMin
       xVelocity *= -1
     }
 
-    if (xMaxOverlap === maxOverlap) {
+    if (x > xMax) {
+      x = xMax
       xVelocity *= -1
     }
 
-    if (yMinOverlap === maxOverlap) {
+    if (y < yMin) {
+      y = yMin
+      yVelocity *= -3
+    }
+
+    if (y > yMax) {
+      y = yMax
       yVelocity *= -1
     }
 
-    if (yMaxOverlap === maxOverlap) {
-      yVelocity *= -1
-    }
-
-    if (zMinOverlap === maxOverlap) {
+    if (z < zMin) {
+      z = zMin
       zVelocity *= -1
     }
 
-    if (zMaxOverlap === maxOverlap) {
+    if (z > zMax) {
+      z = zMax
       zVelocity *= -1
     }
 
-    let posDelta = vec3.create()
-    vec3.scale(posDelta, velocity, -maxOverlap)
-    vec3.add(position, position, posDelta)
-
-    this.position = position
+    this.position = vec3.fromValues(x, y, z)
     this.velocity = vec3.fromValues(xVelocity, yVelocity, zVelocity)
 
-    this.tick(maxOverlap)
+    // this.tick(maxOverlap)
   }
 
   tick (timeDelta) {
