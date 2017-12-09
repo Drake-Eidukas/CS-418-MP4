@@ -5,18 +5,18 @@
  * @class Sphere
  */
 class Sphere {
-  constructor (radius = Math.random() * 2, speed = Math.random() * 5) {
+  constructor (radius = Math.random() * 2, speed = Math.random() * 100) {
     this.radius = radius
 
     this.position = vec3.create()
-    vec3.random(this.position, 10 - this.radius)
+    this.position = vec3.random(this.position, 10 - this.radius)
 
     let velocity = vec3.create()
-    vec3.random(velocity, speed)
-    this.velocity = velocity
+    this.velocity = vec3.random(velocity, speed)
 
-    console.log(`position: ${this.position}`)
-    console.log(`velocity: ${this.velocity}`)
+    this.mass = 1
+    
+    this.color = vec3.fromValues(Math.random(), Math.random(), Math.random())
   }
 
   get radius () {
@@ -25,14 +25,6 @@ class Sphere {
 
   set radius (radius) {
     this._radius = radius
-    this.radiusSq = this.radius * this.radius
-
-    this.mass = this.radiusSq
-
-    let red = 255.0 * this.mass
-    let green = 255.0 * (1.0 - Math.abs(1.0 - 2.0 * this.mass))
-    let blue = 255.0 * (1.0 - this.mass)
-    this.color = vec3.fromValues(red, green, blue)
   }
 
   get position () {
@@ -82,7 +74,7 @@ class Sphere {
   }
 
   static get GRAVITY () {
-    return 9.81
+    return -9.81
   }
 
   /**
@@ -92,30 +84,33 @@ class Sphere {
    * https://www.grc.nasa.gov/www/k-12/airplane/dragsphere.html
    * Mass is in kg, radius in m, velocity in m/s, etc.
    */
-  get dragForce () {
-    let force = Sphere.HALFCDRHO * this.speedSq * this.radiusSq // magnitude of force
-    let direction = vec3.create()
-    direction = vec3.negate(direction, this.velocity) // direction of movement
-    vec3.normalize(direction, direction) // unit vector in the direction of movement
-    vec3.scale(direction, direction, force) // vector in the opposite direction of movement with length of the force of drag
+  // get dragForce () {
+  //   let force = Sphere.HALFCDRHO * this.speedSq * this.radiusSq // magnitude of force
+  //   let direction = vec3.create()
+  //   direction = vec3.negate(direction, this.velocity) // direction of movement
+  //   vec3.normalize(direction, direction) // unit vector in the direction of movement
+  //   vec3.scale(direction, direction, force) // vector in the opposite direction of movement with length of the force of drag
 
-    return direction
+  //   return direction
+  // }
+
+  dragFactor (timeDelta) {
+    return Math.pow(0.9, timeDelta)
   }
 
   get gravityForce () {
-    return vec3.fromValues(0, -1 * Sphere.GRAVITY * this.mass, 0)
+    return vec3.fromValues(0, Sphere.GRAVITY * this.mass, 0)
   }
 
   get acceleration () {
-    let combinedForce = vec3.create()
-    vec3.add(combinedForce, this.gravityForce, this.dragForce)
-    vec3.scale(combinedForce, combinedForce, 1.0 / this.mass)
-
-    return combinedForce
+    let gravity = this.gravityForce
+    vec3.scale(gravity, gravity, 1 / this.mass)
+    return gravity
   }
 
   updatePosition (timeDelta) {
-    let velocity = this.updateVelocity(timeDelta)
+    let velocity = vec3.clone(this.updateVelocity(timeDelta))
+
     vec3.scale(velocity, velocity, timeDelta)
 
     let position = this.position
@@ -130,6 +125,8 @@ class Sphere {
     vec3.scale(acceleration, acceleration, timeDelta)
 
     let velocity = this.velocity
+    vec3.scale(velocity, velocity, this.dragFactor(timeDelta))
+    
     vec3.add(velocity, velocity, acceleration)
     this.velocity = velocity
 
@@ -160,15 +157,8 @@ class Sphere {
    * @memberOf Sphere
    */
   handleCollisions (timeDelta, boundingRange = this.createBoundingRange(-10, 10, -10, 10, -10, 10)) {
-    let position = this.position
-    let x = position[0]
-    let y = position[1]
-    let z = position[2]
-
-    let velocity = this.velocity
-    let xVelocity = velocity[0]
-    let yVelocity = velocity[1]
-    let zVelocity = velocity[2]
+    let [x, y, z] = this.position
+    let [xVelocity, yVelocity, zVelocity] = this.velocity
 
     // Bounding box of position-- box - radius
     let xMin = boundingRange.x.min + this.radius
@@ -190,7 +180,7 @@ class Sphere {
 
     if (y <= yMin) {
       y = yMin
-      yVelocity = 10
+      yVelocity *= -1
     }
 
     if (y >= yMax) {

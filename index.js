@@ -12,8 +12,8 @@ var vertexPositionBuffer
 var sphereVertexPositionBuffer
 var sphereVertexNormalBuffer
 
-var eyePt = vec3.fromValues(0.0, 0.0, 150.0)
-var viewDir = vec3.fromValues(0.0, 0.0, -1.0)
+var eyePt = vec3.fromValues(30.0, 30.0, 30.0)
+var viewDir = vec3.fromValues(-1.0, -1.0, -1.0)
 var up = vec3.fromValues(0.0, 1.0, 0.0)
 var viewPt = vec3.fromValues(0.0, 0.0, 0.0)
 
@@ -25,7 +25,7 @@ var currentlyPressedKeys = {}
 
 var mvMatrixStack = []
 
-var physics = new PhysicsEngine()
+var physics
 
 function setupSphereBuffers() {
   let sphereSoup = []
@@ -229,11 +229,11 @@ function draw() {
     vec3.add(viewPt, eyePt, viewDir)
     mat4.lookAt(mvMatrix, eyePt, viewPt, up)
 
-    var lightPosEye4 = vec4.fromValues(0.0, 0.0, 50.0, 1.0)
+    var lightPosEye4 = vec4.fromValues(-10.0, 30.0, -10.0, 1.0)
     lightPosEye4 = vec4.transformMat4(lightPosEye4, lightPosEye4, mvMatrix)
     var lightPosEye = vec3.fromValues(lightPosEye4[0], lightPosEye4[1], lightPosEye4[2])
 
-    ka = vec3.fromValues(0.0, 0.0, 0.0)
+    ka = sphere.color
     kd = sphere.color
     ks = sphere.color
 
@@ -289,7 +289,7 @@ function animate() {
 
     // Animate the rotation using the difference between current time and previous time
     handleKeys()
-    physics.tick(0.1)
+    physics.tick(now - then)
 
     // Remember the current time for the next frame.
     then = now
@@ -299,6 +299,8 @@ function animate() {
 function startup() {
   canvas = document.getElementById('canvas')
   gl = createGLContext(canvas)
+
+  physics = new PhysicsEngine()
 
   setupShaders()
   setupBuffers()
