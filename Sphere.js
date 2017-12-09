@@ -5,15 +5,18 @@
  * @class Sphere
  */
 class Sphere {
-  constructor (radius = Math.random(), speed = Math.random() * 200) {
+  constructor (radius = Math.random() * 2, speed = Math.random() * 5) {
     this.radius = radius
-    this.speed = speed
 
     this.position = vec3.create()
-    vec3.random(this.position, 1 - this.radius)
+    vec3.random(this.position, 10 - this.radius)
 
-    this.velocity = vec3.create()
-    vec3.random(this.velocity, speed)
+    let velocity = vec3.create()
+    vec3.random(velocity, speed)
+    this.velocity = velocity
+
+    console.log(`position: ${this.position}`)
+    console.log(`velocity: ${this.velocity}`)
   }
 
   get radius () {
@@ -24,7 +27,7 @@ class Sphere {
     this._radius = radius
     this.radiusSq = this.radius * this.radius
 
-    this.mass = radius * radius * 0.5
+    this.mass = this.radiusSq
 
     let red = 255.0 * this.mass
     let green = 255.0 * (1.0 - Math.abs(1.0 - 2.0 * this.mass))
@@ -91,9 +94,9 @@ class Sphere {
    */
   get dragForce () {
     let force = Sphere.HALFCDRHO * this.speedSq * this.radiusSq // magnitude of force
-    let direction = vec3.clone(this.velocity) // direction of movement
+    let direction = vec3.create()
+    direction = vec3.negate(direction, this.velocity) // direction of movement
     vec3.normalize(direction, direction) // unit vector in the direction of movement
-    vec3.negate(direction, direction) // unit vector in the opposite direction of movement
     vec3.scale(direction, direction, force) // vector in the opposite direction of movement with length of the force of drag
 
     return direction
@@ -175,32 +178,32 @@ class Sphere {
     let zMin = boundingRange.z.min + this.radius
     let zMax = boundingRange.z.max - this.radius
 
-    if (x < xMin) {
+    if (x <= xMin) {
       x = xMin
       xVelocity *= -1
     }
 
-    if (x > xMax) {
+    if (x >= xMax) {
       x = xMax
       xVelocity *= -1
     }
 
-    if (y < yMin) {
+    if (y <= yMin) {
       y = yMin
-      yVelocity *= -3
+      yVelocity = 10
     }
 
-    if (y > yMax) {
+    if (y >= yMax) {
       y = yMax
       yVelocity *= -1
     }
 
-    if (z < zMin) {
+    if (z <= zMin) {
       z = zMin
       zVelocity *= -1
     }
 
-    if (z > zMax) {
+    if (z >= zMax) {
       z = zMax
       zVelocity *= -1
     }

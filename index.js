@@ -237,7 +237,7 @@ function draw() {
     kd = sphere.color
     ks = sphere.color
 
-    mat4.scale(mvMatrix, mvMatrix, transformVec)
+    mat4.scale(mvMatrix, mvMatrix, vec3.fromValues(sphere.radius, sphere.radius, sphere.radius))
 
     mat4.translate(mvMatrix, mvMatrix, sphere.position)
 
