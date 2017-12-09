@@ -248,6 +248,10 @@ function draw() {
   })
 }
 
+function reset () {
+  physics.resetSpheres()
+}
+
 /**
  * Handle user pressing keys on their keyboard
  * @param {*} event 
