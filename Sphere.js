@@ -79,7 +79,7 @@ class Sphere {
   }
 
   static get GRAVITY () {
-    return 9.8
+    return 9.81
   }
 
   /**
