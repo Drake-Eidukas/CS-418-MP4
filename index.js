@@ -27,7 +27,10 @@ var mvMatrixStack = []
 
 var physics
 
-function setupSphereBuffers() {
+/**
+ * Instantiate the sphere buffers to be used later in rendering code
+ */
+function setupSphereBuffers () {
   let sphereSoup = []
   let sphereNormals = []
 
@@ -53,7 +56,10 @@ function setupSphereBuffers() {
   console.log(`Normals: ${sphereNormals.length / 3}`)
 }
 
-function drawSphere() {
+/**
+ * Draw a sphere using the information currently in the buffers
+ */
+function drawSphere () {
   gl.bindBuffer(gl.ARRAY_BUFFER, sphereVertexPositionBuffer)
   gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, sphereVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0)
 
@@ -63,27 +69,42 @@ function drawSphere() {
   gl.drawArrays(gl.TRIANGLES, 0, sphereVertexPositionBuffer.numItems)
 }
 
-function uploadModelViewMatrixToShader() {
+/**
+ * Upload mvMatrix to the shader
+ */
+function uploadModelViewMatrixToShader () {
   gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix)
 }
 
-function uploadProjectionMatrixToShader() {
+/**
+ * Upload pMatrix to the shader
+ */
+function uploadProjectionMatrixToShader () {
   gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix)
 }
 
-function uploadNormalMatrixToShader() {
+/**
+ * Upload nMatrix to the shader
+ */
+function uploadNormalMatrixToShader () {
   mat3.fromMat4(nMatrix, mvMatrix)
   mat3.transpose(nMatrix, nMatrix)
   mat3.invert(nMatrix, nMatrix)
   gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, nMatrix)
 }
 
-function mvPushMatrix() {
+/**
+ * Push the current mvMatrix onto the mvMatrix stack
+ */
+function mvPushMatrix () {
   var copy = mat4.clone(mvMatrix)
   mvMatrixStack.push(copy)
 }
 
-function mvPopMatrix() {
+/**
+ * Pop the top mvMatrix from the mvMatrix stack
+ */
+function mvPopMatrix () {
   if (mvMatrixStack.length === 0) {
     throw Error('Invalid popMatrix!')
   }
@@ -91,17 +112,31 @@ function mvPopMatrix() {
   mvMatrix = mvMatrixStack.pop()
 }
 
-function setMatrixUniforms() {
+/**
+ * Set matrix uniform variables in the shader
+ */
+function setMatrixUniforms () {
   uploadModelViewMatrixToShader()
   uploadNormalMatrixToShader()
   uploadProjectionMatrixToShader()
 }
 
-function degToRad(degrees) {
+/**
+ * Given an angle in degrees, convert the angle to radians
+ *
+ * @param {any} degrees Degrees to convert to radians
+ * @returns degrees converted to radians
+ */
+function degToRad (degrees) {
   return degrees * Math.PI / 180
 }
 
-function createGLContext(canvas) {
+/**
+ * Create a GL context given an HTML canvas element
+ * @param {any} canvas HTML canvas element to create a GL context out of 
+ * @returns GL context created
+ */
+function createGLContext (canvas) {
   var names = ['webgl', 'experimental-webgl']
   var context = null
   for (var i = 0; i < names.length; i++) {
@@ -121,7 +156,12 @@ function createGLContext(canvas) {
   return context
 }
 
-function loadShaderFromDOM(id) {
+/**
+ * Given the CSS id of a shader element in HTML, buffer the string program from the HTML
+ * @param {any} id Element id to scrape from
+ * @returns Shader loaded from the DOM
+ */
+function loadShaderFromDOM (id) {
   var shaderScript = document.getElementById(id)
 
   // If we don't find an element with the specified id
@@ -160,7 +200,10 @@ function loadShaderFromDOM(id) {
   return shader
 }
 
-function setupShaders() {
+/**
+ * Setup shaders and create the program to use in the application 
+ */
+function setupShaders () {
   vertexShader = loadShaderFromDOM('vshader')
   fragmentShader = loadShaderFromDOM('fshader')
 
@@ -195,24 +238,45 @@ function setupShaders() {
   shaderProgram.uniformSpecularMatColorLoc = gl.getUniformLocation(shaderProgram, 'uSpecularMatColor')
 }
 
-function uploadLightsToShader(location, ambient, diffuse, specular) {
+/**
+ * Given information about the light, upload the light to the program to use in rendering
+ *
+ * @param {any} location vec3 location of the light
+ * @param {any} ambient vec3 ambient light color
+ * @param {any} diffuse vec3 diffuse light color
+ * @param {any} specular vec3 specular light color
+ */
+function uploadLightsToShader (location, ambient, diffuse, specular) {
   gl.uniform3fv(shaderProgram.uniformLightPositionLoc, location)
   gl.uniform3fv(shaderProgram.uniformAmbientLightColorLoc, ambient)
   gl.uniform3fv(shaderProgram.uniformDiffuseLightColorLoc, diffuse)
   gl.uniform3fv(shaderProgram.uniformSpecularLightColorLoc, specular)
 }
 
-function uploadMaterialToShader(ambient, diffuse, specular) {
+/**
+ * Upload the given information about lighting the current material
+ *
+ * @param {any} ambient vec3 ambient light reflectivity
+ * @param {any} diffuse vec3 diffuse light reflectivity
+ * @param {any} specular vec3 specular light reflectivity
+ */
+function uploadMaterialToShader (ambient, diffuse, specular) {
   gl.uniform3fv(shaderProgram.uniformAmbientMatColorLoc, ambient)
   gl.uniform3fv(shaderProgram.uniformDiffuseMatColorLoc, diffuse)
   gl.uniform3fv(shaderProgram.uniformSpecularMatColorLoc, specular)
 }
 
-function setupBuffers() {
+/**
+ * Set up buffers to be used by the rendering program
+ */
+function setupBuffers () {
   setupSphereBuffers()
 }
 
-function draw() {
+/**
+ * Draw the current scene as per the physics engine
+ */
+function draw () {
   gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight)
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -248,6 +312,9 @@ function draw() {
   })
 }
 
+/**
+ * Reset the entire simulation by clearing all spheres from the physics engine
+ */
 function reset () {
   physics.resetSpheres()
 }
@@ -256,7 +323,7 @@ function reset () {
  * Handle user pressing keys on their keyboard
  * @param {*} event 
  */
-function handleKeyDown(event) {
+function handleKeyDown (event) {
   currentlyPressedKeys[event.keyCode] = true
 }
 
@@ -264,7 +331,7 @@ function handleKeyDown(event) {
  * Handle a keyup event.
  * @param {*} event 
  */
-function handleKeyUp(event) {
+function handleKeyUp (event) {
   if (event.keyCode === 32) {
     physics.addSphere()
   }
@@ -274,7 +341,7 @@ function handleKeyUp(event) {
 /**
  * Manage keys pressed
  */
-function handleKeys() {
+function handleKeys () {
   // let space = currentlyPressedKeys[32]
 
   // if (space) {
@@ -282,6 +349,9 @@ function handleKeys() {
   // }
 }
 
+/**
+ * Animate the geometry by prompting the physics engine to tick along all of the spheres
+ */
 function animate() {
   if (then === 0) {
     then = Date.now()
@@ -300,7 +370,10 @@ function animate() {
   }
 }
 
-function startup() {
+/**
+ * Runs the boilerplate startup code to get the webapp to work
+ */
+function startup () {
   canvas = document.getElementById('canvas')
   gl = createGLContext(canvas)
 
@@ -314,7 +387,10 @@ function startup() {
   tick()
 }
 
-function tick() {
+/**
+ * Performs a single tick of the webapp.
+ */
+function tick () {
   requestAnimFrame(tick)
   animate()
   draw()
